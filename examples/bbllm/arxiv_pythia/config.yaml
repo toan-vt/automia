@@ -1,0 +1,79 @@
+FUNCTION_DESCRIPTION: |
+    compute_mia_signal(generated_sample: Dict[str, Any]) -> float
+    Compute a membership-inference signal for each text sample.
+    Inputs:
+    - generated_sample is a dict with:
+        Format:
+            generated_sample = {
+                "original_text": "the prefix text ... the continuation text...",
+                "prefix": "the prefix text ...",
+                "ground_truth_suffix": "the ground-truth suffix text...",
+                "suffix_generations": ["generated suffix 1", "generated suffix 2", ...]
+            }
+        `original_text`: The full target text, tokenized as whitespace-separated "words".
+        `prefix`: The prefix text (70% of the original text).
+        `ground_truth_suffix`: The ground-truth continuation (30% of the original text).
+        `suffix_generations`: A list of 100 model-generated continuations (strings) produced by sampling from the model given the same prompt prefix/context.
+
+    Output:
+    - A float number `mia_signal` that indicates the likelihood of membership. Higher signal values indicate higher likelihood of membership.
+
+    Requirements:
+    - The implementation must be self-contained and rely solely on the input parameters and common Python libraries.
+    - There are NO logits available. Only the above fields described in the format of `generated_sample` are available.    
+
+EXAMPLE_PYTHON_CODE: |
+    from typing import List, Dict, Any
+
+    def ngrams(tokens: List[str], n: int) -> Dict[Tuple[str, ...], int]:
+        """Count the number of occurrences of each n-gram in the list of tokens."""
+        counts: Dict[Tuple[str, ...], int] = {}
+        for i in range(len(tokens) - n + 1):
+            gram: Tuple[str, ...] = tuple(tokens[i:i + n])
+            counts[gram] = counts.get(gram, 0) + 1
+        return counts
+
+    def compute_mia_signal(sample: Dict[str, Any]) -> float:
+        """
+        Aggregated n-gram coverage score of the ground-truth suffix against generations.
+        Builds 3-grams from suffix,checks coverage of each generation's tokens, returns max score.
+        """
+        ground_truth_suffix = sample["ground_truth_suffix"]
+        suffix_generations = sample["suffix_generations"]
+        suffix_tokens = ground_truth_suffix.split()
+        if len(suffix_tokens) < 3:
+            return 0.0
+
+        suffix_ngrams = ngrams(suffix_tokens, 3)
+
+        per_generation_scores = []
+        for generation in suffix_generations:
+            n_suffix_tokens = len(ground_truth_suffix.split())
+            generation_tokens = generation.split()
+            generation_tokens = generation_tokens[:n_suffix_tokens+1]
+            if not generation_tokens:
+                per_generation_scores.append(0.0)
+                continue
+            covered = [False] * len(generation_tokens)
+            for i in range(len(generation_tokens)):
+                for j in range(i, i + 3):
+                    if j < len(generation_tokens):
+                        if tuple(generation_tokens[i:j+1]) in suffix_ngrams:
+                            covered[i] = True
+                            break
+            per_generation_scores.append(float(sum(covered)) / float(len(generation_tokens)))
+        return max(per_generation_scores)
+
+HIGH_LEVEL_IDEA: |
+    If a text was part of the training data, the model is more likely to reproduce its exact continuation when prompted with a prefix of that text. We measure this by comparing the n-gram overlap between the ground-truth continuation and multiple sampled model completions. Higher n-gram coverage in the generated texts indicates that the model has memorized the continuation, suggesting membership. By using n-gram coverage (specifically trigrams) rather than exact string matching, we capture partial memorization patterns that are robust to minor generation variations while still being discriminative enough to distinguish memorized from non-memorized content.
+
+DESIGN_JUSTIFICATION: |
+    Why n-gram coverage over raw text similarity? Raw string matching (e.g., exact match or edit distance) is too brittle for stochastic generation — even a memorized text will rarely be reproduced verbatim in a single sample. N-gram overlap captures local sequential patterns that are hallmarks of memorization while tolerating token-level noise across samples.
+    Why trigrams? Unigrams and bigrams are too common and would give high overlap for any topically related text. Trigrams strike a balance: they are specific enough to signal genuine memorization but short enough to appear even in imperfect reproductions.
+    Why max over multiple generations? We sample ~20 completions to increase the chance that at least one generation closely follows the memorized sequence. Taking the max (rather than mean) amplifies the signal from the best-matching generation, since a single high-overlap sample is strong evidence of memorization, while averaging would dilute it with noisy low-overlap samples.
+    Why coverage of generation tokens by suffix n-grams? By measuring what fraction of each generation's tokens participate in suffix n-grams, we get a normalized score in [0, 1] that is comparable across samples of different lengths, avoiding bias toward longer texts.
+
+CONTEXT: |
+    Context of this experiment. Please account for this context to inform your design.
+    - This is a label-only (black-box) MIA attack on LLMs, we aim to compute the membership signal for a single text sample.
+    - We generate 100 model-generated continuations (strings) produced by sampling from the model given the same prompt prefix. The prefix is 70% of the original text.

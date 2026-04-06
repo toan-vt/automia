@@ -1,0 +1,116 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "automia"
+version = "0.0.1"
+description = "Automated Membership Inference Attacks: Discovering MIA Signal Computations using LLM Agents"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.8"
+authors = [
+    {name = "AutoMIA team", email = "anonymous@email"}
+]
+keywords = ["machine-learning", "agents", "membership inference attack", "mia", "llm"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+dependencies = [
+    "pydantic>=2.0.0",
+    "langchain>=0.1.0",
+    "langchain-core>=0.1.0",
+    "PyYAML>=6.0",
+    "numpy>=1.24.1",
+]
+
+[project.optional-dependencies]
+openai = [
+    "openai>=1.0.0",
+    "langchain-openai>=0.0.5",
+]
+google = [
+    "langchain-google-genai>=0.0.5",
+]
+postgres = [
+    "psycopg2-binary>=2.9.0",
+]
+search = [
+    "faiss-cpu>=1.7.0",
+    "bm25s>=0.1.0",
+    "PyStemmer>=2.0.0",
+]
+dev = [
+    "pytest>=7.0.0",
+    "black>=23.0.0",
+    "mypy>=1.0.0",
+    "ruff>=0.1.0",
+]
+full = [
+    "automia[openai,google,postgres,search]",
+]
+all = [
+    "automia[full,dev]",
+]
+
+[project.scripts]
+automia = "automia.main:main"
+
+[project.urls]
+Homepage = "https://github.com/placeholder/automia"
+Repository = "https://github.com/placeholder/automia"
+Documentation = "https://github.com/placeholder/automia#readme"
+"Bug Tracker" = "https://github.com/placeholder/automia/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.black]
+line-length = 120
+target-version = ["py38", "py39", "py310", "py311", "py312"]
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
+
+[tool.ruff]
+line-length = 120
+target-version = "py38"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "C4"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
