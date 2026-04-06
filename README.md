@@ -1,4 +1,4 @@
-<h1 align="center"> Differentially Private Synthetic Data via Foundation Model APIs 2: Text</h1>
+<h1 align="center"> Automated Membership Inference Attacks: Discovering MIA Signal Computations using LLM Agents </h1>
 
 <p align="center">
 <a href="https://arxiv.org/abs/2603.19375">📃 Paper</a>
