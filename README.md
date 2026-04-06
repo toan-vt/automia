@@ -1,7 +1,18 @@
+<h1 align="center"> Differentially Private Synthetic Data via Foundation Model APIs 2: Text</h1>
+
+<p align="center">
+<a href="https://arxiv.org/abs/2603.19375">📃 Paper</a>
+•
+<a href="http://toan-vt.github.io/automia" >Demo</a>
+</p>
+
 ## Installation
 
-To install `automia`:
+To install `automia`(editable):
 > python -m pip install -e ".[all]"
+
+or `automia`(package)
+> pip install automia
 
 A sandbox environment (`env.sh`) that will be used to execute the generated MIAs should be installed with common computation packages (such as numpy, torch, scipy,..) and packages required to run the MIAs. We recommend to save the model's outputs (i.e., logits) using safetensor and read load to save computational cost each trial.
 
