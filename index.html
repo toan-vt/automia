@@ -153,14 +153,16 @@
             padding: 12px 16px;
             border-radius: 12px;
             font-size: 0.85rem;
-            width: 220px;
-            top: -20px;
+            width: min(220px, calc(100% - 20px));
+            top: 8px;
+            left: 50%;
             opacity: 0;
-            transform: translateY(10px);
+            transform: translateX(-50%) translateY(10px);
             transition: all 0.3s ease;
             z-index: 100;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
             pointer-events: none;
+            text-align: center;
         }
 
         .thought-bubble.visible {
@@ -169,15 +171,11 @@
         }
 
         .explorer-bubble {
-            left: 50%;
-            transform: translateX(-50%) translateY(10px);
-            top: -100px;
+            top: 8px;
         }
 
         .exploiter-bubble {
-            left: 50%;
-            transform: translateX(-50%) translateY(10px);
-            top: -100px;
+            top: 8px;
         }
 
         .thought-bubble.visible.explorer-bubble {
@@ -200,8 +198,7 @@
 
         .explorer-bubble::after,
         .exploiter-bubble::after {
-            border-top-color: var(--border);
-            top: 100%;
+            display: none;
         }
 
         /* Communication Packets */
